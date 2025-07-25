@@ -23,15 +23,10 @@
       font-size: 1rem;
       width: 150px;
     }
-    input::-webkit-outer-spin-button,
-    input::-webkit-inner-spin-button {
-      -webkit-appearance: none;
-      margin: 0;
-    }
     button {
       padding: 0.5rem 1rem;
       font-size: 1rem;
-      margin-left: 0.5rem;
+      margin: 0.5rem;
     }
     #result {
       margin-top: 1rem;
@@ -46,6 +41,20 @@
       color: green;
       margin-top: 1rem;
     }
+    #progressBarContainer {
+      width: 80%;
+      background: #ddd;
+      height: 20px;
+      border-radius: 10px;
+      margin: 1rem auto;
+      overflow: hidden;
+    }
+    #progressBar {
+      height: 100%;
+      background-color: #4caf50;
+      width: 0%;
+      transition: width 0.3s ease;
+    }
   </style>
 </head>
 <body>
@@ -55,6 +64,10 @@
   <div id="scoreboard">
     ✅ Correct: <span id="correctCount">0</span> &nbsp;&nbsp;
     ❌ Incorrect: <span id="incorrectCount">0</span>
+  </div>
+
+  <div id="progressBarContainer">
+    <div id="progressBar"></div>
   </div>
 
   <div id="game">
@@ -68,6 +81,7 @@
       <button onclick="loadNewImage()">New Image</button>
     </div>
     <div id="congrats"></div>
+    <button id="playAgainBtn" onclick="resetGame()" style="display:none;">🔁 Play Again</button>
   </div>
 
   <script>
@@ -80,11 +94,28 @@
       // Add more image filenames here
     ];
 
-    let remainingImages = [...imageList];
+    let remainingImages = [];
     let currentImageFile = '';
     let correctCount = 0;
     let incorrectCount = 0;
     let guessSubmitted = false;
+
+    function loadFromStorage() {
+      correctCount = parseInt(localStorage.getItem('correctCount')) || 0;
+      incorrectCount = parseInt(localStorage.getItem('incorrectCount')) || 0;
+      updateScore();
+    }
+
+    function saveToStorage() {
+      localStorage.setItem('correctCount', correctCount);
+      localStorage.setItem('incorrectCount', incorrectCount);
+    }
+
+    function updateProgressBar() {
+      const completed = imageList.length - remainingImages.length;
+      const percent = (completed / imageList.length) * 100;
+      document.getElementById('progressBar').style.width = percent + '%';
+    }
 
     function getRandomImage() {
       const index = Math.floor(Math.random() * remainingImages.length);
@@ -93,7 +124,6 @@
 
     function loadNewImage() {
       if (!guessSubmitted && currentImageFile) {
-        // Don't allow skipping the current image
         document.getElementById('result').textContent = '❗You must guess before moving to the next image.';
         document.getElementById('result').style.color = 'orange';
         return;
@@ -104,6 +134,7 @@
         document.getElementById('templateImage').style.display = 'none';
         document.getElementById('submitBtn').disabled = true;
         document.getElementById('guessInput').disabled = true;
+        document.getElementById('playAgainBtn').style.display = 'inline-block';
         return;
       }
 
@@ -129,8 +160,6 @@
         correctCount++;
         document.getElementById('result').textContent = '✅ Correct!';
         document.getElementById('result').style.color = 'green';
-
-        // Remove the image from pool
         remainingImages = remainingImages.filter(img => img !== currentImageFile);
       } else {
         incorrectCount++;
@@ -139,6 +168,8 @@
       }
 
       updateScore();
+      updateProgressBar();
+      saveToStorage();
       document.getElementById('submitBtn').disabled = true;
     }
 
@@ -153,8 +184,23 @@
       }
     }
 
-    // Load the first image
-    window.onload = loadNewImage;
+    function resetGame() {
+      remainingImages = [...imageList];
+      currentImageFile = '';
+      document.getElementById('submitBtn').disabled = false;
+      document.getElementById('guessInput').disabled = false;
+      document.getElementById('playAgainBtn').style.display = 'none';
+      document.getElementById('congrats').textContent = '';
+      document.getElementById('templateImage').style.display = 'block';
+      updateProgressBar();
+      loadNewImage();
+    }
+
+    // Initialize game on load
+    window.onload = () => {
+      loadFromStorage();
+      resetGame();
+    };
   </script>
 </body>
 </html>
