@@ -193,6 +193,8 @@
     function checkGuess() {
       if (guessSubmitted || !currentImageFile) return;
 
+      new Audio('place.wav').play();
+
       const userGuess = document.getElementById('guessInput').value.trim().toLowerCase();
       const correctAnswer = currentImageFile.replace(/^c|\.png$/gi, '').toLowerCase();
 
