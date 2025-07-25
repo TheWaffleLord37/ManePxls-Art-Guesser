@@ -19,14 +19,6 @@
       padding: 0.5rem 1rem;
       font-size: 0.9rem;
     }
-    img {
-      max-width: 90%;
-      height: auto;
-      border: 2px solid #ccc;
-      border-radius: 8px;
-      margin: 0 auto 1rem;
-      display: block;
-    }
     input[type=text] {
       padding: 0.5rem;
       font-size: 1rem;
@@ -64,6 +56,14 @@
       width: 0%;
       transition: width 0.3s ease;
     }
+    img {
+      max-width: 90%;
+      height: auto;
+      border: 2px solid #ccc;
+      border-radius: 8px;
+      margin: 2rem auto 1rem;
+      display: block;
+    }
   </style>
 </head>
 <body>
@@ -81,20 +81,22 @@
     <div id="progressBar"></div>
   </div>
 
-  <div id="game">
-    <img id="templateImage" src="" alt="Canvas template"/>
-    <div id="inputSection">
-      <input type="text" id="guessInput" placeholder="e.g. 51 or 88a" onkeydown="handleEnter(event)" />
-      <button id="submitBtn" onclick="checkGuess()">Submit</button>
-    </div>
-    <div id="result"></div>
-    <div id="buttonsSection" style="margin-top: 1rem;">
-      <button id="skipBtn" onclick="skipImage()">Skip</button>
-      <button id="nextBtn" onclick="loadNewImage()" style="display:none;">Next Image</button>
-    </div>
-    <div id="congrats"></div>
-    <button id="playAgainBtn" onclick="resetGame()" style="display:none;">🔁 Play Again</button>
+  <div id="inputSection">
+    <input type="text" id="guessInput" placeholder="e.g. 51 or 88a" onkeydown="handleEnter(event)" />
+    <button id="submitBtn" onclick="checkGuess()">Submit</button>
   </div>
+
+  <div id="result"></div>
+
+  <div id="buttonsSection" style="margin-top: 1rem;">
+    <button id="skipBtn" onclick="skipImage()">Skip</button>
+    <button id="nextBtn" onclick="loadNewImage()" style="display:none;">Next Image</button>
+  </div>
+
+  <div id="congrats"></div>
+  <button id="playAgainBtn" onclick="resetAll()" style="display:none;">🔁 Play Again</button>
+
+  <img id="templateImage" src="" alt="Canvas template"/>
 
   <script>
     const imageList = [
@@ -106,7 +108,6 @@
       // Add more image filenames here
     ];
 
-    let viewedImages = [];
     let guessedImages = [];
     let currentImageFile = '';
     let correctCount = 0;
@@ -137,52 +138,55 @@
     }
 
     function getRemainingImages() {
-      return imageList.filter(img => !viewedImages.includes(img));
+      return imageList.filter(img => !guessedImages.includes(img));
     }
 
     function getRandomImage() {
       const available = getRemainingImages();
+      if (available.length === 0) return null;
       const index = Math.floor(Math.random() * available.length);
       return available[index];
     }
 
     function loadNewImage() {
-      const available = getRemainingImages();
-      if (available.length === 0) {
+      const newImage = getRandomImage();
+      if (!newImage) {
         showCongrats();
         return;
       }
 
-      resetInput();
-
-      currentImageFile = getRandomImage();
-      viewedImages.push(currentImageFile);
-
-      const imagePath = 'images/' + currentImageFile;
-      document.getElementById('templateImage').src = imagePath;
+      currentImageFile = newImage;
+      guessSubmitted = false;
+      document.getElementById('templateImage').src = 'images/' + currentImageFile;
       document.getElementById('templateImage').style.display = 'block';
+      document.getElementById('guessInput').value = '';
+      document.getElementById('result').textContent = '';
+      document.getElementById('submitBtn').disabled = false;
+      document.getElementById('skipBtn').style.display = 'inline-block';
+      document.getElementById('nextBtn').style.display = 'none';
     }
 
     function checkGuess() {
       if (guessSubmitted || !currentImageFile) return;
-      guessSubmitted = true;
 
       const userGuess = document.getElementById('guessInput').value.trim().toLowerCase();
       const correctAnswer = currentImageFile.replace(/^c|\.png$/gi, '').toLowerCase();
 
+      guessSubmitted = true;
+
       if (userGuess === correctAnswer) {
         correctCount++;
+        guessedImages.push(currentImageFile);
         document.getElementById('result').textContent = '✅ Correct!';
         document.getElementById('result').style.color = 'green';
+        updateProgressBar();
       } else {
         incorrectCount++;
         document.getElementById('result').textContent = `❌ Nope! That was canvas ${correctAnswer}.`;
         document.getElementById('result').style.color = 'red';
       }
 
-      guessedImages.push(currentImageFile);
       updateScore();
-      updateProgressBar();
       saveToStorage();
 
       document.getElementById('submitBtn').disabled = true;
@@ -195,18 +199,15 @@
     }
 
     function skipImage() {
-      if (!currentImageFile) return;
-      // Do NOT add to guessedImages or increment score/progress
-      loadNewImage();
+      if (!guessSubmitted) {
+        loadNewImage();
+      }
     }
 
-    function resetInput() {
-      document.getElementById('result').textContent = '';
-      document.getElementById('guessInput').value = '';
-      document.getElementById('submitBtn').disabled = false;
-      guessSubmitted = false;
-      document.getElementById('skipBtn').style.display = 'inline-block';
-      document.getElementById('nextBtn').style.display = 'none';
+    function handleEnter(event) {
+      if (event.key === 'Enter') {
+        checkGuess();
+      }
     }
 
     function showCongrats() {
@@ -218,40 +219,28 @@
       document.getElementById('playAgainBtn').style.display = 'inline-block';
     }
 
-    function resetGame() {
-      viewedImages = [];
+    function resetAll() {
+      correctCount = 0;
+      incorrectCount = 0;
+      guessedImages = [];
+      currentImageFile = '';
       guessSubmitted = false;
+      localStorage.clear();
+      updateScore();
+      updateProgressBar();
       document.getElementById('inputSection').style.display = 'block';
       document.getElementById('result').style.display = 'block';
       document.getElementById('buttonsSection').style.display = 'block';
       document.getElementById('congrats').textContent = '';
       document.getElementById('playAgainBtn').style.display = 'none';
       loadNewImage();
-      updateProgressBar();
-    }
-
-    function resetAll() {
-      correctCount = 0;
-      incorrectCount = 0;
-      guessedImages = [];
-      viewedImages = [];
-      guessSubmitted = false;
-      localStorage.clear();
-      updateScore();
-      resetGame();
-    }
-
-    function handleEnter(event) {
-      if (event.key === 'Enter') {
-        checkGuess();
-      }
     }
 
     window.onload = () => {
       loadFromStorage();
       updateScore();
       updateProgressBar();
-      resetGame();
+      loadNewImage();
     };
   </script>
 </body>
