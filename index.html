@@ -110,6 +110,7 @@
 
     let guessedImages = [];
     let currentImageFile = '';
+    let previousImageFile = '';
     let correctCount = 0;
     let incorrectCount = 0;
     let guessSubmitted = false;
@@ -142,27 +143,35 @@
     }
 
     function getRandomImage() {
-      const available = getRemainingImages();
+      const available = getRemainingImages().filter(img => img !== currentImageFile);
       if (available.length === 0) return null;
       const index = Math.floor(Math.random() * available.length);
       return available[index];
     }
 
     function loadNewImage() {
-      const newImage = getRandomImage();
-      if (!newImage) {
+      const remaining = getRemainingImages();
+      if (remaining.length === 0) {
         showCongrats();
         return;
       }
 
+      const newImage = getRandomImage();
+      if (!newImage) return;
+
+      previousImageFile = currentImageFile;
       currentImageFile = newImage;
       guessSubmitted = false;
+
       document.getElementById('templateImage').src = 'images/' + currentImageFile;
       document.getElementById('templateImage').style.display = 'block';
       document.getElementById('guessInput').value = '';
       document.getElementById('result').textContent = '';
       document.getElementById('submitBtn').disabled = false;
-      document.getElementById('skipBtn').style.display = 'inline-block';
+
+      // Hide skip if final image
+      const remainingAfterThis = getRemainingImages().filter(img => img !== currentImageFile);
+      document.getElementById('skipBtn').style.display = remainingAfterThis.length === 0 ? 'none' : 'inline-block';
       document.getElementById('nextBtn').style.display = 'none';
     }
 
@@ -200,7 +209,16 @@
 
     function skipImage() {
       if (!guessSubmitted) {
-        loadNewImage();
+        const available = getRemainingImages().filter(img => img !== currentImageFile);
+        if (available.length === 0) return; // No other image to skip to
+        previousImageFile = currentImageFile;
+        currentImageFile = getRandomImage();
+        document.getElementById('templateImage').src = 'images/' + currentImageFile;
+        document.getElementById('guessInput').value = '';
+        document.getElementById('result').textContent = '';
+        document.getElementById('submitBtn').disabled = false;
+        document.getElementById('skipBtn').style.display = 'inline-block';
+        document.getElementById('nextBtn').style.display = 'none';
       }
     }
 
@@ -224,6 +242,7 @@
       incorrectCount = 0;
       guessedImages = [];
       currentImageFile = '';
+      previousImageFile = '';
       guessSubmitted = false;
       localStorage.clear();
       updateScore();
