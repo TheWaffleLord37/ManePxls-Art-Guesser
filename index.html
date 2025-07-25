@@ -79,7 +79,8 @@
     </div>
     <div id="result"></div>
     <div id="buttonsSection" style="margin-top: 1rem;">
-      <button onclick="skipImage()">New Image</button>
+      <button onclick="skipImage()">Skip</button>
+      <button onclick="resetAll()">🔁 Reset Everything</button>
     </div>
     <div id="congrats"></div>
     <button id="playAgainBtn" onclick="resetGame()" style="display:none;">🔁 Play Again</button>
@@ -96,58 +97,57 @@
     ];
 
     let remainingImages = [];
+    let completedImages = [];
     let currentImageFile = '';
     let correctCount = 0;
     let incorrectCount = 0;
     let guessSubmitted = false;
 
-    function loadFromStorage() {
-      correctCount = parseInt(localStorage.getItem('correctCount')) || 0;
-      incorrectCount = parseInt(localStorage.getItem('incorrectCount')) || 0;
-      updateScore();
-    }
-
     function saveToStorage() {
       localStorage.setItem('correctCount', correctCount);
       localStorage.setItem('incorrectCount', incorrectCount);
+      localStorage.setItem('completedImages', JSON.stringify(completedImages));
+    }
+
+    function loadFromStorage() {
+      correctCount = parseInt(localStorage.getItem('correctCount')) || 0;
+      incorrectCount = parseInt(localStorage.getItem('incorrectCount')) || 0;
+      completedImages = JSON.parse(localStorage.getItem('completedImages')) || [];
     }
 
     function updateProgressBar() {
-      const completed = imageList.length - remainingImages.length;
-      const percent = (completed / imageList.length) * 100;
+      const total = imageList.length;
+      const percent = (completedImages.length / total) * 100;
       document.getElementById('progressBar').style.width = percent + '%';
     }
 
+    function updateScore() {
+      document.getElementById('correctCount').textContent = correctCount;
+      document.getElementById('incorrectCount').textContent = incorrectCount;
+    }
+
+    function getRemainingImages() {
+      return imageList.filter(img => !completedImages.includes(img));
+    }
+
     function getRandomImage() {
-      const index = Math.floor(Math.random() * remainingImages.length);
-      return remainingImages[index];
+      const available = getRemainingImages();
+      const index = Math.floor(Math.random() * available.length);
+      return available[index];
     }
 
     function loadNewImage() {
-      if (!guessSubmitted && currentImageFile) {
-        document.getElementById('result').textContent = '❗You must guess or skip before moving to the next image.';
-        document.getElementById('result').style.color = 'orange';
-        return;
-      }
-
-      if (remainingImages.length === 0) {
+      const available = getRemainingImages();
+      if (available.length === 0) {
         showCongrats();
         return;
       }
 
       resetInput();
-
       currentImageFile = getRandomImage();
       const imagePath = 'images/' + currentImageFile;
       document.getElementById('templateImage').src = imagePath;
       document.getElementById('templateImage').style.display = 'block';
-    }
-
-    function resetInput() {
-      document.getElementById('result').textContent = '';
-      document.getElementById('guessInput').value = '';
-      document.getElementById('submitBtn').disabled = false;
-      guessSubmitted = false;
     }
 
     function checkGuess() {
@@ -161,55 +161,39 @@
         correctCount++;
         document.getElementById('result').textContent = '✅ Correct!';
         document.getElementById('result').style.color = 'green';
-        // Remove guessed image from pool
-        remainingImages = remainingImages.filter(img => img !== currentImageFile);
-        updateScore();
-        updateProgressBar();
-        saveToStorage();
-
-        if (remainingImages.length === 0) {
-          showCongrats();
-          return;
-        }
       } else {
         incorrectCount++;
         document.getElementById('result').textContent = `❌ Nope! That was canvas ${correctAnswer}.`;
         document.getElementById('result').style.color = 'red';
-        // Remove incorrect guess image as well (so no repeats)
-        remainingImages = remainingImages.filter(img => img !== currentImageFile);
-        updateScore();
-        updateProgressBar();
-        saveToStorage();
       }
 
+      completedImages.push(currentImageFile);
+      updateScore();
+      updateProgressBar();
+      saveToStorage();
+
       document.getElementById('submitBtn').disabled = true;
+
+      if (getRemainingImages().length === 0) {
+        showCongrats();
+      }
     }
 
     function skipImage() {
-      if (!guessSubmitted && currentImageFile) {
-        // Remove skipped image without affecting score or progress
-        remainingImages = remainingImages.filter(img => img !== currentImageFile);
-        resetInput();
-        updateProgressBar();
+      if (!currentImageFile) return;
 
-        if (remainingImages.length === 0) {
-          showCongrats();
-          return;
-        }
-
-        loadNewImage();
-      }
+      completedImages.push(currentImageFile);
+      guessSubmitted = true;
+      saveToStorage();
+      updateProgressBar();
+      loadNewImage();
     }
 
-    function updateScore() {
-      document.getElementById('correctCount').textContent = correctCount;
-      document.getElementById('incorrectCount').textContent = incorrectCount;
-    }
-
-    function handleEnter(event) {
-      if (event.key === 'Enter') {
-        checkGuess();
-      }
+    function resetInput() {
+      document.getElementById('result').textContent = '';
+      document.getElementById('guessInput').value = '';
+      document.getElementById('submitBtn').disabled = false;
+      guessSubmitted = false;
     }
 
     function showCongrats() {
@@ -222,28 +206,37 @@
     }
 
     function resetGame() {
-      remainingImages = [...imageList];
-      currentImageFile = '';
-      correctCount = 0;
-      incorrectCount = 0;
+      completedImages = [];
       guessSubmitted = false;
-      updateScore();
-      updateProgressBar();
-      saveToStorage();
-
-      document.getElementById('templateImage').style.display = 'block';
       document.getElementById('inputSection').style.display = 'block';
       document.getElementById('result').style.display = 'block';
       document.getElementById('buttonsSection').style.display = 'block';
       document.getElementById('congrats').textContent = '';
       document.getElementById('playAgainBtn').style.display = 'none';
-
       loadNewImage();
+      updateProgressBar();
     }
 
-    // Initialize game on load
+    function resetAll() {
+      correctCount = 0;
+      incorrectCount = 0;
+      completedImages = [];
+      guessSubmitted = false;
+      saveToStorage();
+      updateScore();
+      resetGame();
+    }
+
+    function handleEnter(event) {
+      if (event.key === 'Enter') {
+        checkGuess();
+      }
+    }
+
     window.onload = () => {
       loadFromStorage();
+      updateScore();
+      updateProgressBar();
       resetGame();
     };
   </script>
