@@ -199,8 +199,6 @@
     function checkGuess() {
       if (guessSubmitted || !currentImageFile) return;
 
-      new Audio('place.wav').play();
-
       const userGuess = document.getElementById('guessInput').value.trim().toLowerCase();
       const correctAnswer = currentImageFile.replace(/^c|\.png$/gi, '').toLowerCase();
 
@@ -254,7 +252,7 @@
     function showCongrats() {
       let congratsText = '🎉 Congrats! You guessed all the canvases!';
       if (incorrectCount === 0) {
-        congratsText += ' 💯 Perfect score — no incorrect guesses!';
+        congratsText += '<br>💯 Perfect score — no incorrect guesses!';
       }
       document.getElementById('congrats').textContent = congratsText;
 
