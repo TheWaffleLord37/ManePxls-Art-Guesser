@@ -16,7 +16,8 @@
       height: auto;
       border: 2px solid #ccc;
       border-radius: 8px;
-      margin-bottom: 1rem;
+      margin: 0 auto 1rem;
+      display: block;
     }
     input[type=text] {
       padding: 0.5rem;
@@ -72,13 +73,13 @@
 
   <div id="game">
     <img id="templateImage" src="" alt="Canvas template"/>
-    <div>
+    <div id="inputSection">
       <input type="text" id="guessInput" placeholder="e.g. 51 or 88a" onkeydown="handleEnter(event)" />
       <button id="submitBtn" onclick="checkGuess()">Submit</button>
     </div>
     <div id="result"></div>
-    <div style="margin-top: 1rem;">
-      <button onclick="loadNewImage()">New Image</button>
+    <div id="buttonsSection" style="margin-top: 1rem;">
+      <button onclick="skipImage()">New Image</button>
     </div>
     <div id="congrats"></div>
     <button id="playAgainBtn" onclick="resetGame()" style="display:none;">🔁 Play Again</button>
@@ -124,29 +125,29 @@
 
     function loadNewImage() {
       if (!guessSubmitted && currentImageFile) {
-        document.getElementById('result').textContent = '❗You must guess before moving to the next image.';
+        document.getElementById('result').textContent = '❗You must guess or skip before moving to the next image.';
         document.getElementById('result').style.color = 'orange';
         return;
       }
 
       if (remainingImages.length === 0) {
-        document.getElementById('congrats').textContent = '🎉 Congrats! You guessed all the canvases!';
-        document.getElementById('templateImage').style.display = 'none';
-        document.getElementById('submitBtn').disabled = true;
-        document.getElementById('guessInput').disabled = true;
-        document.getElementById('playAgainBtn').style.display = 'inline-block';
+        showCongrats();
         return;
       }
 
-      document.getElementById('result').textContent = '';
-      document.getElementById('guessInput').value = '';
-      document.getElementById('submitBtn').disabled = false;
-      guessSubmitted = false;
+      resetInput();
 
       currentImageFile = getRandomImage();
       const imagePath = 'images/' + currentImageFile;
       document.getElementById('templateImage').src = imagePath;
       document.getElementById('templateImage').style.display = 'block';
+    }
+
+    function resetInput() {
+      document.getElementById('result').textContent = '';
+      document.getElementById('guessInput').value = '';
+      document.getElementById('submitBtn').disabled = false;
+      guessSubmitted = false;
     }
 
     function checkGuess() {
@@ -160,17 +161,44 @@
         correctCount++;
         document.getElementById('result').textContent = '✅ Correct!';
         document.getElementById('result').style.color = 'green';
+        // Remove guessed image from pool
         remainingImages = remainingImages.filter(img => img !== currentImageFile);
+        updateScore();
+        updateProgressBar();
+        saveToStorage();
+
+        if (remainingImages.length === 0) {
+          showCongrats();
+          return;
+        }
       } else {
         incorrectCount++;
         document.getElementById('result').textContent = `❌ Nope! That was canvas ${correctAnswer}.`;
         document.getElementById('result').style.color = 'red';
+        // Remove incorrect guess image as well (so no repeats)
+        remainingImages = remainingImages.filter(img => img !== currentImageFile);
+        updateScore();
+        updateProgressBar();
+        saveToStorage();
       }
 
-      updateScore();
-      updateProgressBar();
-      saveToStorage();
       document.getElementById('submitBtn').disabled = true;
+    }
+
+    function skipImage() {
+      if (!guessSubmitted && currentImageFile) {
+        // Remove skipped image without affecting score or progress
+        remainingImages = remainingImages.filter(img => img !== currentImageFile);
+        resetInput();
+        updateProgressBar();
+
+        if (remainingImages.length === 0) {
+          showCongrats();
+          return;
+        }
+
+        loadNewImage();
+      }
     }
 
     function updateScore() {
@@ -184,15 +212,32 @@
       }
     }
 
+    function showCongrats() {
+      document.getElementById('congrats').textContent = '🎉 Congrats! You guessed all the canvases!';
+      document.getElementById('templateImage').style.display = 'none';
+      document.getElementById('inputSection').style.display = 'none';
+      document.getElementById('result').style.display = 'none';
+      document.getElementById('buttonsSection').style.display = 'none';
+      document.getElementById('playAgainBtn').style.display = 'inline-block';
+    }
+
     function resetGame() {
       remainingImages = [...imageList];
       currentImageFile = '';
-      document.getElementById('submitBtn').disabled = false;
-      document.getElementById('guessInput').disabled = false;
-      document.getElementById('playAgainBtn').style.display = 'none';
-      document.getElementById('congrats').textContent = '';
-      document.getElementById('templateImage').style.display = 'block';
+      correctCount = 0;
+      incorrectCount = 0;
+      guessSubmitted = false;
+      updateScore();
       updateProgressBar();
+      saveToStorage();
+
+      document.getElementById('templateImage').style.display = 'block';
+      document.getElementById('inputSection').style.display = 'block';
+      document.getElementById('result').style.display = 'block';
+      document.getElementById('buttonsSection').style.display = 'block';
+      document.getElementById('congrats').textContent = '';
+      document.getElementById('playAgainBtn').style.display = 'none';
+
       loadNewImage();
     }
 
