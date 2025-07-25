@@ -244,7 +244,12 @@
     }
 
     function showCongrats() {
-      document.getElementById('congrats').textContent = '🎉 Congrats! You guessed all the canvases!';
+      let congratsText = '🎉 Congrats! You guessed all the canvases!';
+      if (incorrectCount === 0) {
+        congratsText += ' 💯 Perfect score — no incorrect guesses!';
+      }
+      document.getElementById('congrats').textContent = congratsText;
+
       document.getElementById('templateImage').style.display = 'none';
       document.getElementById('inputSection').style.display = 'none';
       document.getElementById('result').style.display = 'none';
