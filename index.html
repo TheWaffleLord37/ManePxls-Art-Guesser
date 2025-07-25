@@ -151,6 +151,7 @@
     }
 
     function loadNewImage() {
+      document.getElementById('finalText').textContent = '';
       const remaining = getRemainingImages();
 
       // If no unguessed images left, show congrats
@@ -191,8 +192,7 @@
       document.getElementById('nextBtn').style.display = 'none';
 
       // Show "Final image!" text if this is the last image left
-      const remaining = getRemainingImages();
-      const isFinal = remaining.length === 1 && remaining[0] === currentImageFile;
+      const isFinal = remainingAfterThis.length === 0;
       document.getElementById('finalText').textContent = isFinal ? 'Final image!' : '';
     }
 
