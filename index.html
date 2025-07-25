@@ -18,11 +18,10 @@
       border-radius: 8px;
       margin-bottom: 1rem;
     }
-    input[type=number], input[type=text] {
+    input[type=text] {
       padding: 0.5rem;
       font-size: 1rem;
       width: 150px;
-      -moz-appearance: textfield;
     }
     input::-webkit-outer-spin-button,
     input::-webkit-inner-spin-button {
@@ -41,6 +40,11 @@
     #scoreboard {
       margin: 1.5rem 0;
       font-size: 1.1rem;
+    }
+    #congrats {
+      font-size: 1.3rem;
+      color: green;
+      margin-top: 1rem;
     }
   </style>
 </head>
@@ -63,6 +67,7 @@
     <div style="margin-top: 1rem;">
       <button onclick="loadNewImage()">New Image</button>
     </div>
+    <div id="congrats"></div>
   </div>
 
   <script>
@@ -82,16 +87,26 @@
     let guessSubmitted = false;
 
     function getRandomImage() {
-      if (remainingImages.length === 0) {
-        remainingImages = [...imageList];
-      }
-
       const index = Math.floor(Math.random() * remainingImages.length);
-      const image = remainingImages.splice(index, 1)[0]; // remove and return
-      return image;
+      return remainingImages[index];
     }
 
     function loadNewImage() {
+      if (!guessSubmitted && currentImageFile) {
+        // Don't allow skipping the current image
+        document.getElementById('result').textContent = '❗You must guess before moving to the next image.';
+        document.getElementById('result').style.color = 'orange';
+        return;
+      }
+
+      if (remainingImages.length === 0) {
+        document.getElementById('congrats').textContent = '🎉 Congrats! You guessed all the canvases!';
+        document.getElementById('templateImage').style.display = 'none';
+        document.getElementById('submitBtn').disabled = true;
+        document.getElementById('guessInput').disabled = true;
+        return;
+      }
+
       document.getElementById('result').textContent = '';
       document.getElementById('guessInput').value = '';
       document.getElementById('submitBtn').disabled = false;
@@ -100,23 +115,27 @@
       currentImageFile = getRandomImage();
       const imagePath = 'images/' + currentImageFile;
       document.getElementById('templateImage').src = imagePath;
+      document.getElementById('templateImage').style.display = 'block';
     }
 
     function checkGuess() {
-      if (guessSubmitted) return;
+      if (guessSubmitted || !currentImageFile) return;
       guessSubmitted = true;
 
-      const userGuessRaw = document.getElementById('guessInput').value.trim().toLowerCase();
+      const userGuess = document.getElementById('guessInput').value.trim().toLowerCase();
       const correctAnswer = currentImageFile.replace(/^c|\.png$/gi, '').toLowerCase();
 
-      if (userGuessRaw === correctAnswer) {
+      if (userGuess === correctAnswer) {
         correctCount++;
-        document.getElementById('result').textContent = "✅ Correct!";
-        document.getElementById('result').style.color = "green";
+        document.getElementById('result').textContent = '✅ Correct!';
+        document.getElementById('result').style.color = 'green';
+
+        // Remove the image from pool
+        remainingImages = remainingImages.filter(img => img !== currentImageFile);
       } else {
         incorrectCount++;
         document.getElementById('result').textContent = `❌ Nope! That was canvas ${correctAnswer}.`;
-        document.getElementById('result').style.color = "red";
+        document.getElementById('result').style.color = 'red';
       }
 
       updateScore();
@@ -129,12 +148,12 @@
     }
 
     function handleEnter(event) {
-      if (event.key === "Enter") {
+      if (event.key === 'Enter') {
         checkGuess();
       }
     }
 
-    // Load first image on page load
+    // Load the first image
     window.onload = loadNewImage;
   </script>
 </body>
