@@ -151,8 +151,23 @@
 
     function loadNewImage() {
       const remaining = getRemainingImages();
+
+      // If no unguessed images left, show congrats
       if (remaining.length === 0) {
         showCongrats();
+        return;
+      }
+
+      // If there's only one image left (likely the current one), reuse it
+      if (remaining.length === 1 && remaining[0] === currentImageFile) {
+        guessSubmitted = false;
+        document.getElementById('templateImage').src = 'images/' + currentImageFile;
+        document.getElementById('templateImage').style.display = 'block';
+        document.getElementById('guessInput').value = '';
+        document.getElementById('result').textContent = '';
+        document.getElementById('submitBtn').disabled = false;
+        document.getElementById('skipBtn').style.display = 'none';
+        document.getElementById('nextBtn').style.display = 'none';
         return;
       }
 
