@@ -191,9 +191,9 @@
       document.getElementById('skipBtn').style.display = remainingAfterThis.length === 0 ? 'none' : 'inline-block';
       document.getElementById('nextBtn').style.display = 'none';
 
-      // Show "Final image!" text if this is the last image left or no images remain
+      // Show "Final image!" text if no images remain except the current one
       const remaining = getRemainingImages();
-      const isFinal = remainingAfterThis.length === 0 || remaining.length === 0;
+      const isFinal = remaining.length === 1 && remaining[0] === currentImageFile || remaining.length === 0;
       document.getElementById('finalText').textContent = isFinal ? 'Final image!' : '';
     }
 
