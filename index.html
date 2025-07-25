@@ -83,6 +83,7 @@
 
   <div id="inputSection">
     <input type="text" id="guessInput" placeholder="e.g. 51 or 88a" onkeydown="handleEnter(event)" />
+    <div id="finalText" style="color: red; font-weight: bold; margin-top: 0.5rem;"></div>
     <button id="submitBtn" onclick="checkGuess()">Submit</button>
   </div>
 
@@ -188,6 +189,11 @@
       const remainingAfterThis = getRemainingImages().filter(img => img !== currentImageFile);
       document.getElementById('skipBtn').style.display = remainingAfterThis.length === 0 ? 'none' : 'inline-block';
       document.getElementById('nextBtn').style.display = 'none';
+
+      // Show "Final image!" text if this is the last image left
+      const remaining = getRemainingImages();
+      const isFinal = remaining.length === 1 && remaining[0] === currentImageFile;
+      document.getElementById('finalText').textContent = isFinal ? 'Final image!' : '';
     }
 
     function checkGuess() {
