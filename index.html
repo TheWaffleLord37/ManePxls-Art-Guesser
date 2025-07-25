@@ -10,6 +10,14 @@
       text-align: center;
       margin: 2rem;
       background-color: #f4f4f4;
+      position: relative;
+    }
+    #resetBtn {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      padding: 0.5rem 1rem;
+      font-size: 0.9rem;
     }
     img {
       max-width: 90%;
@@ -59,6 +67,8 @@
   </style>
 </head>
 <body>
+  <button id="resetBtn" onclick="resetAll()">🔁 Reset Everything</button>
+
   <h1>ManePxls Canvas Guessing Game</h1>
   <p>Guess which canvas this was made on. Just enter the number, like <strong>40</strong> or <strong>56a</strong>.</p>
 
@@ -79,8 +89,8 @@
     </div>
     <div id="result"></div>
     <div id="buttonsSection" style="margin-top: 1rem;">
-      <button onclick="skipImage()">Skip</button>
-      <button onclick="resetAll()">🔁 Reset Everything</button>
+      <button id="skipBtn" onclick="skipImage()">Skip</button>
+      <button id="nextBtn" onclick="loadNewImage()" style="display:none;">Next Image</button>
     </div>
     <div id="congrats"></div>
     <button id="playAgainBtn" onclick="resetGame()" style="display:none;">🔁 Play Again</button>
@@ -96,8 +106,8 @@
       // Add more image filenames here
     ];
 
-    let remainingImages = [];
-    let completedImages = [];
+    let viewedImages = [];
+    let guessedImages = [];
     let currentImageFile = '';
     let correctCount = 0;
     let incorrectCount = 0;
@@ -106,18 +116,18 @@
     function saveToStorage() {
       localStorage.setItem('correctCount', correctCount);
       localStorage.setItem('incorrectCount', incorrectCount);
-      localStorage.setItem('completedImages', JSON.stringify(completedImages));
+      localStorage.setItem('guessedImages', JSON.stringify(guessedImages));
     }
 
     function loadFromStorage() {
       correctCount = parseInt(localStorage.getItem('correctCount')) || 0;
       incorrectCount = parseInt(localStorage.getItem('incorrectCount')) || 0;
-      completedImages = JSON.parse(localStorage.getItem('completedImages')) || [];
+      guessedImages = JSON.parse(localStorage.getItem('guessedImages')) || [];
     }
 
     function updateProgressBar() {
       const total = imageList.length;
-      const percent = (completedImages.length / total) * 100;
+      const percent = (guessedImages.length / total) * 100;
       document.getElementById('progressBar').style.width = percent + '%';
     }
 
@@ -127,7 +137,7 @@
     }
 
     function getRemainingImages() {
-      return imageList.filter(img => !completedImages.includes(img));
+      return imageList.filter(img => !viewedImages.includes(img));
     }
 
     function getRandomImage() {
@@ -144,7 +154,10 @@
       }
 
       resetInput();
+
       currentImageFile = getRandomImage();
+      viewedImages.push(currentImageFile);
+
       const imagePath = 'images/' + currentImageFile;
       document.getElementById('templateImage').src = imagePath;
       document.getElementById('templateImage').style.display = 'block';
@@ -167,25 +180,23 @@
         document.getElementById('result').style.color = 'red';
       }
 
-      completedImages.push(currentImageFile);
+      guessedImages.push(currentImageFile);
       updateScore();
       updateProgressBar();
       saveToStorage();
 
       document.getElementById('submitBtn').disabled = true;
+      document.getElementById('skipBtn').style.display = 'none';
+      document.getElementById('nextBtn').style.display = 'inline-block';
 
-      if (getRemainingImages().length === 0) {
+      if (guessedImages.length === imageList.length) {
         showCongrats();
       }
     }
 
     function skipImage() {
       if (!currentImageFile) return;
-
-      completedImages.push(currentImageFile);
-      guessSubmitted = true;
-      saveToStorage();
-      updateProgressBar();
+      // Do NOT add to guessedImages or increment score/progress
       loadNewImage();
     }
 
@@ -194,6 +205,8 @@
       document.getElementById('guessInput').value = '';
       document.getElementById('submitBtn').disabled = false;
       guessSubmitted = false;
+      document.getElementById('skipBtn').style.display = 'inline-block';
+      document.getElementById('nextBtn').style.display = 'none';
     }
 
     function showCongrats() {
@@ -206,7 +219,7 @@
     }
 
     function resetGame() {
-      completedImages = [];
+      viewedImages = [];
       guessSubmitted = false;
       document.getElementById('inputSection').style.display = 'block';
       document.getElementById('result').style.display = 'block';
@@ -220,9 +233,10 @@
     function resetAll() {
       correctCount = 0;
       incorrectCount = 0;
-      completedImages = [];
+      guessedImages = [];
+      viewedImages = [];
       guessSubmitted = false;
-      saveToStorage();
+      localStorage.clear();
       updateScore();
       resetGame();
     }
