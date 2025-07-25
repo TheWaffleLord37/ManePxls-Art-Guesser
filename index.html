@@ -151,7 +151,6 @@
     }
 
     function loadNewImage() {
-      document.getElementById('finalText').textContent = '';
       const remaining = getRemainingImages();
 
       // If no unguessed images left, show congrats
@@ -170,6 +169,11 @@
         document.getElementById('submitBtn').disabled = false;
         document.getElementById('skipBtn').style.display = 'none';
         document.getElementById('nextBtn').style.display = 'none';
+        // Keep "Final image!" text if it's the last one
+        const isFinal = getRemainingImages().filter(img => img !== currentImageFile).length === 0;
+        if (!isFinal) {
+          document.getElementById('finalText').textContent = '';
+        }
         return;
       }
 
