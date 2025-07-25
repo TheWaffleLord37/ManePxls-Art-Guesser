@@ -70,7 +70,7 @@
   <button id="resetBtn" onclick="resetAll()">🔁 Reset Everything</button>
 
   <h1>ManePxls Canvas Guessing Game</h1>
-  <p>Guess which canvas this was made on. Just enter the number, like <strong>40</strong> or <strong>56a</strong>.</p>
+  <p>Guess which canvas this template was used on. Enter the canvas number, like <strong>40</strong> or <strong>56a</strong>.</p>
 
   <div id="scoreboard">
     ✅ Correct: <span id="correctCount">0</span> &nbsp;&nbsp;
@@ -256,7 +256,7 @@
     function showCongrats() {
       let congratsText = '🎉 Congrats! You guessed all the canvases!';
       if (incorrectCount === 0) {
-        congratsText += '<br>💯 Perfect score — no incorrect guesses!';
+        congratsText += '<br><br>💯 Perfect score — no incorrect guesses!';
       }
       document.getElementById('congrats').innerHTML = congratsText;
 
