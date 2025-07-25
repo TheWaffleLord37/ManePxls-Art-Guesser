@@ -18,10 +18,16 @@
       border-radius: 8px;
       margin-bottom: 1rem;
     }
-    input {
+    input[type=number] {
       padding: 0.5rem;
       font-size: 1rem;
       width: 150px;
+      -moz-appearance: textfield;
+    }
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
     }
     button {
       padding: 0.5rem 1rem;
@@ -32,11 +38,20 @@
       margin-top: 1rem;
       font-weight: bold;
     }
+    #scoreboard {
+      margin: 1.5rem 0;
+      font-size: 1.1rem;
+    }
   </style>
 </head>
 <body>
   <h1>ManePxls Canvas Guessing Game</h1>
   <p>Guess which canvas this was made on. Just enter the number, like <strong>51</strong>.</p>
+
+  <div id="scoreboard">
+    ✅ Correct: <span id="correctCount">0</span> &nbsp;&nbsp;
+    ❌ Incorrect: <span id="incorrectCount">0</span>
+  </div>
 
   <div id="game">
     <img id="templateImage" src="" alt="Canvas template"/>
@@ -61,17 +76,26 @@
     ];
 
     let currentImageFile = '';
+    let previousImageFile = '';
+    let correctCount = 0;
+    let incorrectCount = 0;
 
     function getRandomImage() {
-      const index = Math.floor(Math.random() * imageList.length);
-      return imageList[index];
+      if (imageList.length <= 1) return imageList[0];
+      let newImage;
+      do {
+        const index = Math.floor(Math.random() * imageList.length);
+        newImage = imageList[index];
+      } while (newImage === currentImageFile);
+      return newImage;
     }
 
     function loadNewImage() {
       document.getElementById('result').textContent = '';
-      const imageFile = getRandomImage();
-      currentImageFile = imageFile;
-      const imagePath = 'images/' + imageFile;
+      document.getElementById('guessInput').value = '';
+      previousImageFile = currentImageFile;
+      currentImageFile = getRandomImage();
+      const imagePath = 'images/' + currentImageFile;
       document.getElementById('templateImage').src = imagePath;
     }
 
@@ -79,15 +103,23 @@
       const userGuess = document.getElementById('guessInput').value.trim();
       const correctAnswer = currentImageFile.match(/\d+/)[0]; // Extract number from filename
       if (userGuess === correctAnswer) {
+        correctCount++;
         document.getElementById('result').textContent = "✅ Correct!";
         document.getElementById('result').style.color = "green";
       } else {
+        incorrectCount++;
         document.getElementById('result').textContent = `❌ Nope! That was canvas ${correctAnswer}.`;
         document.getElementById('result').style.color = "red";
       }
+      updateScore();
     }
 
-    // Load first image on page load
+    function updateScore() {
+      document.getElementById('correctCount').textContent = correctCount;
+      document.getElementById('incorrectCount').textContent = incorrectCount;
+    }
+
+    // Load the first image on page load
     window.onload = loadNewImage;
   </script>
 </body>
