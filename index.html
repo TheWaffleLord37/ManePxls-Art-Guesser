@@ -1,1 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ManePxls Canvas Guessing Game</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      margin: 2rem;
+      background-color: #f4f4f4;
+    }
+    img {
+      max-width: 90%;
+      height: auto;
+      border: 2px solid #ccc;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+    }
+    input {
+      padding: 0.5rem;
+      font-size: 1rem;
+      width: 150px;
+    }
+    button {
+      padding: 0.5rem 1rem;
+      font-size: 1rem;
+      margin-left: 0.5rem;
+    }
+    #result {
+      margin-top: 1rem;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h1>ManePxls Canvas Guessing Game</h1>
+  <p>Guess which canvas this was made on. Just enter the number, like <strong>51</strong>.</p>
 
+  <div id="game">
+    <img id="templateImage" src="" alt="Canvas template"/>
+    <div>
+      <input type="number" id="guessInput" placeholder="e.g. 51"/>
+      <button onclick="checkGuess()">Submit</button>
+    </div>
+    <div id="result"></div>
+    <div style="margin-top: 1rem;">
+      <button onclick="loadNewImage()">New Image</button>
+    </div>
+  </div>
+
+  <script>
+    const imageList = [
+      'c91.png',
+      'c90.png',
+      'c89.png',
+      'c88a.png',
+      'c88.png',
+      // Add more image filenames here
+    ];
+
+    let currentImageFile = '';
+
+    function getRandomImage() {
+      const index = Math.floor(Math.random() * imageList.length);
+      return imageList[index];
+    }
+
+    function loadNewImage() {
+      document.getElementById('result').textContent = '';
+      const imageFile = getRandomImage();
+      currentImageFile = imageFile;
+      const imagePath = 'images/' + imageFile;
+      document.getElementById('templateImage').src = imagePath;
+    }
+
+    function checkGuess() {
+      const userGuess = document.getElementById('guessInput').value.trim();
+      const correctAnswer = currentImageFile.match(/\d+/)[0]; // Extract number from filename
+      if (userGuess === correctAnswer) {
+        document.getElementById('result').textContent = "✅ Correct!";
+        document.getElementById('result').style.color = "green";
+      } else {
+        document.getElementById('result').textContent = `❌ Nope! That was canvas ${correctAnswer}.`;
+        document.getElementById('result').style.color = "red";
+      }
+    }
+
+    // Load first image on page load
+    window.onload = loadNewImage;
+  </script>
+</body>
+</html>
